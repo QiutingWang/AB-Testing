@@ -41,3 +41,37 @@ total_sample_size / 2
 587
 293.5
 
+#look at experiment result#
+library(tidyverse)
+experiment_data <- read_csv("experiment_data.csv")
+experiment_data
+#return: one more column add it before: condition-->show it whether a control group or a test group
+experiment_data %>%
+  group_by(condition) %>%  #compute the entire length of experiment 
+  summarize(conversion_rate = mean(clicked_adopt_today))
+#return: the conversion rate for the control condition 17%,for test condition was 38%
+
+#we compute it by day of experiment
+group_by(visit_date, condition) %>%    
+  summarize(conversion_rate = mean(clicked_adopt_today))
+#plotting the result
+ggplot(experiment_data_sum,
+       aes(x = visit_date,
+           y = conversion_rate)
+          color = condition,
+          group = condition)) +geom_point() +geom_line()
+
+#confirm the result statistically
+library(tidyverse)
+library(broom)
+experiment_data <- read_csv("experiment_data.csv")
+glm(clicked_adopt_today ~ condition,  #previously we calculate it use logistic regression model in glm(dependent variable~independent variable)
+    family = "binomial",  #make clear what kind of distribution is to use
+    data = experiment_data)%>%  #provide the dataframe 
+  tidy()  #use tidy() from brrom package to see a cleaned up version of results
+#result:
+     term        estimate std.error  statistic  p-value
+1   (Intercept) -1.609438 0.1564922 -10.284464 8.280185e-25
+2 conditiontest  1.138329 0.1971401   5.774212 7.731397e-09
+#interpretation: p-value of conditiontest<0.05, model estmate is positive about 1 -->the test comdition had a higher conversion rate than control
+#The experiment is success!
